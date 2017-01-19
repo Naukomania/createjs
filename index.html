@@ -1,0 +1,108 @@
+<!;DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<script type="text/javascript" src="js/jquery.js"></script>
+	<script type="text/javascript" src="js/easeljs.min.js"></script>
+	<script>
+		var stage;
+		var character;
+		var key_status;
+		var bool_animated = false;
+		var lastSprite = 0;
+	  function init() {
+		  var canvas = document.getElementById("testCanvas");
+			stage = new createjs.Stage(canvas);
+
+			// Создаём надпись
+			var shape = new createjs.Text("Hello World", "20px Arial", "#ff7700");
+			shape.x = 100;
+			shape.scaleX = 5;
+			shape.scaleY = 5;
+			stage.addChild(shape);
+
+			// Создаём картинку с коробкой
+			var image = new createjs.Bitmap("images/box.jpg");
+			image.scaleX = image.scaleY = 0.1;
+			image.x = 200;
+			image.y = 100;
+			image.shadow = new createjs.Shadow("#000000", 5, 5, 10);
+			stage.addChild(image);
+
+			// Спрайт анимация
+			var data = new createjs.SpriteSheet({
+				"images": ["images/boy.png"],
+				"frames": {"regX": 0, "regY": 0, "height": 64, "count": 32, "width": 64},
+				"animations": {
+					"walk_right": [0, 7],
+					"jump_right": [8, 12],
+					"walk_left": [16, 23],
+					"jump_left": [24, 28]
+				}
+			});
+			character = new createjs.Sprite(data, "walk_right");
+			character.gotoAndStop(0);
+			stage.addChild(character);
+
+			stage.update();
+	  }
+
+	  createjs.Ticker.addEventListener("tick", handleTick);
+		function handleTick(event) {
+			stage.update();
+			HandleInput();
+		}
+		function HandleInput()
+		{
+			if (key_status === "d") {
+				if (!bool_animated) {
+					character.gotoAndPlay("walk_right");
+					lastSprite = 0;
+					bool_animated = true;
+				}
+				character.x += 5;
+			} else if (key_status === "a") {
+				if (!bool_animated) {
+					character.gotoAndPlay("walk_left");
+					lastSprite = 16;
+					bool_animated = true;
+				}
+				character.x -= 5;
+			} else if (key_status === " ") {
+				if (!bool_animated) {
+					if (lastSprite === 0) {
+						character.gotoAndPlay("jump_right");
+						bool_animated = true;
+						character.x += 35;
+					} else {
+						character.gotoAndPlay("jump_left");
+						bool_animated = true;
+						character.x -= 35;
+					}
+				}
+			} else if (key_status == 0) {
+				character.gotoAndStop(lastSprite);
+			}
+		}
+
+		// привязка к событиям мыши
+		$(window).keydown(
+		    function(e){
+		        if (key_status == 0) {
+		        	key_status = e.key;
+		        }
+		    }
+		);
+		$(window).keyup(
+		    function(e){
+		        key_status = 0;
+		        bool_animated = false;
+		    }
+		);
+	</script>
+</head>
+<body onload="init();">
+  <canvas id="testCanvas" width="900" height="300"></canvas>
+</body>
+</html>
