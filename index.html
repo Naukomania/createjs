@@ -6,11 +6,24 @@
 	<script type="text/javascript" src="js/jquery.js"></script>
 	<script type="text/javascript" src="js/easeljs.min.js"></script>
 	<script>
+		var KEYCODE_SPACE	= 32;
+		var KEYCODE_LEFT	= 37;
+		var KEYCODE_RIGHT	= 39;
+
+		var jumpSpeed = 1000;
+		var xVel = 5;
+		var yVel = 0;
+		var gravity = 1.2;
+		var isJumping = false;
+		var moveLeft = false;
+		var moveRight = false;
+		var characterMoving = true;
+		var characterHeight = 64;
+		var characterWidth = 64;
+		var characterGround = 100;
+
 		var stage;
 		var character;
-		var key_status;
-		var bool_animated = false;
-		var lastSprite = 0;
 	  function init() {
 		  var canvas = document.getElementById("testCanvas");
 			stage = new createjs.Stage(canvas);
@@ -25,7 +38,7 @@
 			// Создаём картинку с коробкой
 			var image = new createjs.Bitmap("images/box.jpg");
 			image.scaleX = image.scaleY = 0.1;
-			image.x = 200;
+			image.x = 100;
 			image.y = 100;
 			image.shadow = new createjs.Shadow("#000000", 5, 5, 10);
 			stage.addChild(image);
@@ -33,73 +46,98 @@
 			// Спрайт анимация
 			var data = new createjs.SpriteSheet({
 				"images": ["images/boy.png"],
-				"frames": {"regX": 0, "regY": 0, "height": 64, "count": 32, "width": 64},
+				"frames": {"regX": 0, "regY": 0, "height": 64, "count": 7, "width": 64},
 				"animations": {
-					"walk_right": [0, 7],
-					"jump_right": [8, 12],
-					"walk_left": [16, 23],
-					"jump_left": [24, 28]
+					"run": [0, 7],
+					// "jump_right": [8, 12],
+					// "walk_left": [16, 23],
+					// "jump_left": [24, 28]
 				}
 			});
 			character = new createjs.Sprite(data, "walk_right");
 			character.gotoAndStop(0);
+			character.x = 100;
+			character.y = 100;
 			stage.addChild(character);
 
-			stage.update();
+			createjs.Ticker.addEventListener("tick", handleTick);
+	    document.onkeydown = handleKeyDown;
+    	document.onkeyup = handleKeyUp;
 	  }
 
-	  createjs.Ticker.addEventListener("tick", handleTick);
 		function handleTick(event) {
+				if (moveLeft) {
+	        character.x -= xVel;
+	        if (character.scaleX > 0) {
+	            character.scaleX *= -1;
+	            character.x += characterWidth;
+	        }
+	     }else if (moveRight) {
+	        character.x += xVel;
+	        if (character.scaleX < 0) {
+	            character.scaleX *= -1;
+	            character.x -= characterWidth;
+	        }
+	        }
+
+	    if (isJumping) {
+	        yVel += gravity;
+	        character.y += yVel;
+	        
+	        if (character.y > characterGround) {
+	            character.y = characterGround;
+	            yVel = 0;
+	            isJumping = false;
+	        }
+	        
+	        
+	    }
 			stage.update();
-			HandleInput();
 		}
-		function HandleInput()
-		{
-			if (key_status === "d") {
-				if (!bool_animated) {
-					character.gotoAndPlay("walk_right");
-					lastSprite = 0;
-					bool_animated = true;
-				}
-				character.x += 5;
-			} else if (key_status === "a") {
-				if (!bool_animated) {
-					character.gotoAndPlay("walk_left");
-					lastSprite = 16;
-					bool_animated = true;
-				}
-				character.x -= 5;
-			} else if (key_status === " ") {
-				if (!bool_animated) {
-					if (lastSprite === 0) {
-						character.gotoAndPlay("jump_right");
-						bool_animated = true;
-						character.x += 35;
-					} else {
-						character.gotoAndPlay("jump_left");
-						bool_animated = true;
-						character.x -= 35;
-					}
-				}
-			} else if (key_status == 0) {
-				character.gotoAndStop(lastSprite);
-			}
+
+		function jump() {
+		    if (isJumping == false) {
+		        yVel = -15;
+		        isJumping = true;
+		    }
 		}
 
 		// привязка к событиям мыши
-		$(window).keydown(
-		    function(e){
-		        if (key_status == 0) {
-		        	key_status = e.key;
-		        }
+		function handleKeyDown(e) {
+	    switch (e.keyCode) {
+	        case KEYCODE_SPACE:
+	        case 87:  // W
+	            jump();
+	            break;
+	        case KEYCODE_LEFT:
+	        case 65:  // A
+	            moveLeft = true;
+	           character.play();
+	            break;
+	        case KEYCODE_RIGHT:
+	        case 68:  // D
+	            moveRight = true;
+	           character.play();
+	            break;
+	    }
+		 
+		}
+
+		function handleKeyUp(e) {
+		    switch (e.keyCode) {
+		        case KEYCODE_LEFT:
+		        case 65:  // A
+		            moveLeft = false;
+		            character.gotoAndStop(0);
+		            break;
+		        case KEYCODE_RIGHT:
+		        case 68:  // D
+		            moveRight = false;
+		            character.gotoAndStop(0);
+		            break;
+		            
 		    }
-		);
-		$(window).keyup(
-		    function(e){
-		        key_status = 0;
-		        bool_animated = false;
-		    }
-		);
+		}
 	</script>
 </head>
 <body onload="init();">
